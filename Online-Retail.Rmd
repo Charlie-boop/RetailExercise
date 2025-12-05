@@ -1,0 +1,57 @@
+---
+title: "Online Retail"
+author: "Carlos Espinoza"
+date: "2025-11-01"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(xts)
+library(zoo)
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+#Problem 1 - Time Series Analysis
+```{r}
+raw_retail <- readxl::read_excel( "D:/Documents/US Docs/Fall 2025/BZAN 6351/HomeWork/R HW 2 (Due Nov 3) Datasets/online+retail/Online Retail.xlsx") #Importing the dataset
+
+is.ts(raw_retail) #Checking to see if my imported dataset is a Time Series (it's not)
+
+retail_xts <- ts(raw_retail[,-5], start = c(2010, 4), frequency = 4) #Preparing the dataset for use
+
+raw_retail$invoice_date <- as.Date(raw_retail$InvoiceDate) #Encoding the Date field to be more usable with plotting functions
+
+raw_retail$Month <- as.yearmon(raw_retail$InvoiceDate) # ^ Ditto
+
+raw_retail$Quarter <- as.yearqtr(raw_retail$InvoiceDate) # ^ Ditto
+
+monthly_data <- aggregate(Quantity ~ Month, data= raw_retail, sum) #Aggregating the Data to figure the Total Sales
+
+monthly_data <- raw_retail %>%
+  group_by(Month) %>%
+  summarize(TotalSales = sum(Quantity * UnitPrice, na.rm = TRUE))
+
+monthlysales_xts <- xts(monthly_data$TotalSales, order.by = as.Date(monthly_data$Month)) # The resulting object that will be analyzed and plotted
+
+summary(monthlysales_xts) #Time Series Analysis, observing summary statistics
+
+head(monthlysales_xts, n=5) #TSA, looking at the first five rows
+
+nmonths(monthlysales_xts) #TSA, finding how many periods (months) in this data
+
+periodicity(monthlysales_xts) #TSA, finding the periodicity of the data
+
+plot.xts(monthlysales_xts) #Plot the Time Series
+
+acf(monthlysales_xts) #Autocorrelation Function plot
+
+pacf(monthlysales_xts) #Partial Autocorrelation function plot
+```
